@@ -3,18 +3,24 @@ import { WebSocketServer } from 'ws';
 const wss = new WebSocketServer({ port: 8080 });
 let ar = [];
 let p = '';
+let cache = {};
 wss.on('connection', function connection(ws) {
   // da='';
   ws.on('message', function message(data) {
     console.log('received: %s', data);
     p = data + "";
     //main();
-    ar = main(p);
-    ar = [...ar];
-    if (checkPalindrome(ar)) {
-      ws.send('true');
-    }else{
-      ws.send('false');
+    if (checkInCache(p)) {
+      ws.send(cache[p]);
+    } else {
+      ar = main(p);
+      ar = [...ar];
+      if (checkPalindrome(ar)) {
+        ws.send('true');
+      } else {
+        ws.send('false');
+      }
+      putInCache(p,checkPalindrome(ar));
     }
     // for (let i = 0; i < ar.length; i++) {
     //   //const element = array[i];
@@ -174,24 +180,24 @@ function main() {
  * @param {Array} arr - The array to be checked
  * @returns {boolean} - True if at least one element is palindrome, False otherwise
  */
- function checkPalindrome(arr) {
+function checkPalindrome(arr) {
   try {
     // Check if the argument is an array
     if (!Array.isArray(arr)) {
       throw new TypeError("Argument must be an array");
     }
-    
+
     // Loop through the array and check if any element is palindrome
     for (let i = 0; i < arr.length; i++) {
       // Convert the element to string and remove any non-alphanumeric characters
       let str = arr[i].toString().replace(/[^0-9a-z]/gi, '');
-      
+
       // Check if the string is palindrome
       if (str === str.split('').reverse().join('')) {
         return true;
       }
     }
-    
+
     // No palindrome found
     return false;
   } catch (e) {
@@ -199,4 +205,19 @@ function main() {
     console.log(`Error: ${e}`);
     return false;
   }
+}
+
+
+function checkInCache(p){
+  for (var key in cache) {
+    console.log("key " + key + " has value " + cache[key]);
+    if (p===key) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function putInCache(p,b){
+  cache[p]=b;
 }
